@@ -16,6 +16,7 @@
         will-change: transform;
         transform: translate(-50%, -50%) scale(1.15);
     }
+    
 
     #splash { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out; cursor: pointer; }
     #zipVisual { position: absolute; pointer-events: none; animation: zipBlink 1s infinite ease-in-out; }
@@ -37,6 +38,9 @@
         transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
     }
+    #splash {
+        z-index: 200;
+    }
 
     .confetti { position: absolute; z-index: 180; pointer-events: none; will-change: transform; }
 
@@ -55,13 +59,17 @@
     .canvas-live {
         animation: breathing 4s ease-in-out infinite;
     }
+    .blur-effect {
+        filter: blur(4px);
+        transition: filter 0.5s ease-out;
+    }
 </style>
 </head>
 <body>
 
 <div id="game">
-    <img id="bg" src="assets/bg.webp">
-    <canvas id="mainCanvas"></canvas>
+    <img id="bg" src="assets/bg.webp" class="blur-effect">
+    <canvas id="mainCanvas" class="blur-effect"></canvas>
     <div id="finalOverlay"></div>
     <div id="splash" onclick="initGame()">
         <img id="zipVisual" src="assets/zip_line.webp">
@@ -141,6 +149,9 @@
     function initGame() {
     if (gameActive) return;
     gameActive = true;
+    
+    document.getElementById('bg').classList.remove('blur-effect');
+    canvas.classList.remove('blur-effect');
     
     document.getElementById('sndBg').play().catch(()=>{});
     sndBg.volume = 0.1;
@@ -264,6 +275,7 @@
 
     function clickAd() {  window.location.href = 'https://honeytoon.com/comic-video/teach-me-first?n=1'; }
     window.onresize = resize;
+    
 </script>
 </body>
 </html>
