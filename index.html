@@ -18,7 +18,7 @@
     }
 
     #splash { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out; cursor: pointer; }
-    #zipVisual { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; animation: zipBlink 1s infinite ease-in-out; }
+    #zipVisual { position: absolute; pointer-events: none; animation: zipBlink 1s infinite ease-in-out; }
     #startButton { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); width: 75vw; max-width: 420px; z-index: 110; animation: pulse 1.2s infinite; pointer-events: none; }
     #hand { position: absolute; width: 80px; z-index: 120; pointer-events: none; display: none; opacity: 0; transition: opacity 0.5s ease-in; }
 
@@ -42,10 +42,9 @@
 
     @keyframes zipBlink { 0%, 100% { opacity: 0.4; filter: brightness(1) drop-shadow(0 0 5px #00ff66); } 50% { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 15px #00ff66); } }
     @keyframes pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.06); } }
-    @keyframes handMoveUp { 0% { transform: translate(-50%, 0); opacity: 0; } 15% { opacity: 1; } 80% { transform: translate(-50%, -220px); opacity: 1; } 100% { transform: translate(-50%, -220px); opacity: 0; } }
+    @keyframes handMoveUp { 0% { transform: translate(-30%, 0); opacity: 0; } 15% { opacity: 1; } 80% { transform: translate(-15%, -220px); opacity: 1; } 100% { transform: translate(-50%, -220px); opacity: 0; } }
     @keyframes confettiSwing { 0%, 100% { margin-left: -15px; } 50% { margin-left: 15px; } }
-    
-    /* Оновлена анімація дихання: базується на scale(1.15) */
+
     @keyframes breathing {
         0%, 100% { transform: translate(-50%, -50.5%) scale(1.15); }
         50% { transform: translate(-50%, -49.5%) scale(1.17); } 
@@ -105,12 +104,19 @@
         const imgRatio = 1080 / 1920; 
         const screenRatio = canvas.width / canvas.height;
         
-        // Масштаб 1.2 за базовий, а CSS додасть зверху ще 1.15
         const zoom = 1.2; 
         if (screenRatio > imgRatio) { render.h = canvas.height * zoom; render.w = render.h * imgRatio; }
         else { render.w = canvas.width * zoom; render.h = render.w / imgRatio; }
         render.x = (canvas.width - render.w) / 2; render.y = (canvas.height - render.h) / 2;
+
+        zipLine.style.width = render.w + 'px';
         zipLine.style.height = render.h + 'px';
+
+        zipLine.style.left = render.x + 'px';
+        zipLine.style.top = render.y + 'px';
+
+        zipLine.style.transformOrigin = 'center center';
+        zipLine.style.transform = 'scale(1.15)';
         draw();
     }
 
@@ -137,9 +143,10 @@
     gameActive = true;
     
     document.getElementById('sndBg').play().catch(()=>{});
-    
+    sndBg.volume = 0.1;
     canvas.style.transition = 'transform 0.5s ease-in-out';
     canvas.classList.add('canvas-live');
+    zipLine.classList.add('canvas-live');
 
     splash.style.opacity = '0';
     setTimeout(() => {
@@ -175,10 +182,13 @@
         if (progress > lastVoiceProgress + 0.2) {
             lastVoiceProgress += 0.2;
             const v = document.getElementById('sndVoice');
-            v.volume = 0.8; v.currentTime = 0; v.play().catch(()=>{});
+            v.volume = 1; v.currentTime = 0.1; v.play().catch(()=>{});
         }
         draw();
-        if (progress >= 0.90) finish();
+        if (progress >= 0.90) {
+            const v = document.getElementById('sndVoice');
+            v.volume = 0; v.pause();
+            finish();}
     });
 
     window.addEventListener('pointerup', () => { isDragging = false; document.getElementById('sndZip').pause(); });
@@ -252,7 +262,7 @@
         }
     }
 
-    function clickAd() { window.open('https://your-link.com', '_blank'); }
+    function clickAd() {  window.location.href = 'https://honeytoon.com/comic-video/teach-me-first?n=1'; }
     window.onresize = resize;
 </script>
 </body>
