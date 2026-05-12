@@ -15,7 +15,7 @@
         left: 50%; 
         z-index: 2; 
         will-change: transform, filter;
-        transform: translate(-50%, -50%) scale(1.15);
+        transform: translate(-50%, -50%) scale(1.4);
     }
 
     #splash { position: absolute; inset: 0; z-index: 200; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out; cursor: pointer; }
@@ -67,7 +67,7 @@
     .confetti { position: absolute; z-index: 250; pointer-events: none; } 
     .star { position: absolute; z-index: 250; pointer-events: none; background: gold; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
 
-    .blur-effect { filter: blur(8px); }
+    .blur-effect { filter: blur(3px); }
 
     @keyframes zipBlink { 0%, 100% { opacity: 0.4; filter: brightness(1) drop-shadow(0 0 5px #00ff66); } 50% { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 15px #00ff66); } }
     @keyframes pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.06); } }
@@ -78,8 +78,8 @@
     @keyframes confettiSwing { 0%, 100% { margin-left: -15px; } 50% { margin-left: 15px; } }
 
     @keyframes breathing {
-        0%, 100% { transform: translate(-50%, -50.5%) scale(1.15); }
-        50% { transform: translate(-50%, -49.5%) scale(1.17); } 
+        0%, 100% { transform: translate(-50%, -50.5%) scale(1.3); }
+        50% { transform: translate(-50%, -49.5%) scale(1.32); } 
     }
     
     .canvas-live { animation: breathing 4s ease-in-out infinite; }
@@ -154,8 +154,8 @@
         zipLine.style.width = render.w + 'px';
         zipLine.style.height = (render.h * zipH) + 'px';
         zipLine.style.left = render.x + 'px';
-        zipLine.style.top = (render.y + (render.h * (1 - zipH) / 2)) + 'px';
-        zipLine.style.transform = 'scale(1.25)';
+        zipLine.style.top = (render.y + (render.h * (1 - zipH) / 2)+30) + 'px';
+        zipLine.style.transform = 'scale(1.3)';
 
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         draw();
@@ -254,7 +254,7 @@
 
         canvas.classList.remove('canvas-live');
         zipLine.classList.remove('canvas-live');
-        canvas.style.transform = 'translate(-50%, -50%) scale(1.15)'; 
+        canvas.style.transform = 'translate(-50%, -50%) scale(1.3)'; 
 
         finalOverlay.style.opacity = '1';
         createStars();
