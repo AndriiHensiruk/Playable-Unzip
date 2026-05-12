@@ -1,26 +1,45 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-<title>Playable Unzip </title>
+<title>Playable Unzip</title>
 <style>
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
     #game { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-    #bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+    #bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transition: filter 0.5s ease-out; }
+    
     #mainCanvas { 
-       position: absolute; 
+        position: absolute; 
         top: 50%; 
         left: 50%; 
         z-index: 2; 
-        will-change: transform;
+        will-change: transform, filter;
         transform: translate(-50%, -50%) scale(1.15);
     }
-    
 
-    #splash { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out; cursor: pointer; }
-    #zipVisual { position: absolute; pointer-events: none; animation: zipBlink 1s infinite ease-in-out; }
-    #startButton { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); width: 75vw; max-width: 420px; z-index: 110; animation: pulse 1.2s infinite; pointer-events: none; }
+    #splash { position: absolute; inset: 0; z-index: 200; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out; cursor: pointer; }
+    
+    #zipVisual { 
+        position: absolute; 
+        pointer-events: none; 
+        animation: zipBlink 1s infinite ease-in-out; 
+        z-index: 5;
+        will-change: transform;
+        object-fit: contain;
+    }
+
+   #startButton { 
+        position: absolute; 
+        bottom: 40%; 
+        left: 50%;
+        transform: translateX(-50%); 
+        width: 75vw; 
+        max-width: 420px; 
+        z-index: 210;
+        animation: pulse 1.2s infinite; 
+        pointer-events: none; 
+    }
     #hand { position: absolute; width: 80px; z-index: 120; pointer-events: none; display: none; opacity: 0; transition: opacity 0.5s ease-in; }
 
     #finalOverlay {
@@ -31,21 +50,30 @@
     }
 
     #finalCTA {
-        position: absolute; top: 45%; left: 50%;
+        position: absolute; 
+        top: 45%; 
+        left: 50%;
         transform: translate(-50%, -50%) scale(0.8);
-        width: 80vw; max-width: 450px;
-        opacity: 0; z-index: 200; display: none;
+        width: 85vw; 
+        max-width: 450px;
+        opacity: 0; 
+        z-index: 300;
+        display: none;
         transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
-    }
-    #splash {
-        z-index: 200;
+        animation: pulse 1.2s infinite; 
     }
 
-    .confetti { position: absolute; z-index: 180; pointer-events: none; will-change: transform; }
+    .confetti { position: absolute; z-index: 250; pointer-events: none; } 
+    .star { position: absolute; z-index: 250; pointer-events: none; background: gold; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+
+    .blur-effect { filter: blur(8px); }
 
     @keyframes zipBlink { 0%, 100% { opacity: 0.4; filter: brightness(1) drop-shadow(0 0 5px #00ff66); } 50% { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 15px #00ff66); } }
     @keyframes pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.06); } }
+    @keyframes pulseStart { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.06); } }
+    #startButton { animation: pulseStart 1.2s infinite; }
+
     @keyframes handMoveUp { 0% { transform: translate(-30%, 0); opacity: 0; } 15% { opacity: 1; } 80% { transform: translate(-15%, -220px); opacity: 1; } 100% { transform: translate(-50%, -220px); opacity: 0; } }
     @keyframes confettiSwing { 0%, 100% { margin-left: -15px; } 50% { margin-left: 15px; } }
 
@@ -53,16 +81,8 @@
         0%, 100% { transform: translate(-50%, -50.5%) scale(1.15); }
         50% { transform: translate(-50%, -49.5%) scale(1.17); } 
     }
-
-    .star { position: absolute; pointer-events: none; background: gold; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
     
-    .canvas-live {
-        animation: breathing 4s ease-in-out infinite;
-    }
-    .blur-effect {
-        filter: blur(4px);
-        transition: filter 0.5s ease-out;
-    }
+    .canvas-live { animation: breathing 4s ease-in-out infinite; }
 </style>
 </head>
 <body>
@@ -107,81 +127,100 @@
     imgOpen.onload = imgClosed.onload = () => { isImagesLoaded++; if (isImagesLoaded === 2) resize(); };
 
     function resize() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-        const imgRatio = 1080 / 1920; 
-        const screenRatio = canvas.width / canvas.height;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
         
-        const zoom = 1.2; 
-        if (screenRatio > imgRatio) { render.h = canvas.height * zoom; render.w = render.h * imgRatio; }
-        else { render.w = canvas.width * zoom; render.h = render.w / imgRatio; }
-        render.x = (canvas.width - render.w) / 2; render.y = (canvas.height - render.h) / 2;
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
 
+        const imgRatio = 1080 / 1920; 
+        const screenRatio = window.innerWidth / window.innerHeight;
+        
+        if (screenRatio > imgRatio) { 
+            render.h = window.innerHeight; 
+            render.w = render.h * imgRatio; 
+        } else { 
+            render.w = window.innerWidth; 
+            render.h = render.w / imgRatio; 
+        }
+        
+        render.x = (window.innerWidth - render.w) / 2; 
+        render.y = (window.innerHeight - render.h) / 2;
+
+        const zipH = 0.85;
         zipLine.style.width = render.w + 'px';
-        zipLine.style.height = render.h + 'px';
-
+        zipLine.style.height = (render.h * zipH) + 'px';
         zipLine.style.left = render.x + 'px';
-        zipLine.style.top = render.y + 'px';
+        zipLine.style.top = (render.y + (render.h * (1 - zipH) / 2)) + 'px';
+        zipLine.style.transform = 'scale(1.25)';
 
-        zipLine.style.transformOrigin = 'center center';
-        zipLine.style.transform = 'scale(1.15)';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         draw();
     }
 
     function draw() {
         if (!render.w) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
         ctx.drawImage(imgOpen, render.x, render.y, render.w, render.h);
-        tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+        
+        tempCtx.save();
+        const dpr = window.devicePixelRatio || 1;
+        tempCanvas.width = window.innerWidth * dpr;
+        tempCanvas.height = window.innerHeight * dpr;
+        tempCtx.scale(dpr, dpr);
+        
+        tempCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
         tempCtx.drawImage(imgClosed, render.x, render.y, render.w, render.h);
+        
         const revealY = (render.y + render.h * 0.85) - (progress * render.h * 0.7);
         const fadeHeight = 50;
-        tempCtx.save();
+
         tempCtx.globalCompositeOperation = 'destination-out';
         const grad = tempCtx.createLinearGradient(0, revealY - fadeHeight, 0, revealY);
-        grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,1)');
+        grad.addColorStop(0, 'rgba(0,0,0,0)'); 
+        grad.addColorStop(1, 'rgba(0,0,0,1)');
         tempCtx.fillStyle = grad;
-        tempCtx.fillRect(render.x, revealY - fadeHeight, render.w, tempCanvas.height - (revealY - fadeHeight));
+        tempCtx.fillRect(render.x, revealY - fadeHeight, render.w, window.innerHeight - (revealY - fadeHeight));
         tempCtx.restore();
-        ctx.drawImage(tempCanvas, 0, 0);
+
+        ctx.drawImage(tempCanvas, 0, 0, window.innerWidth * dpr, window.innerHeight * dpr, 0, 0, window.innerWidth, window.innerHeight);
     }
 
     function initGame() {
-    if (gameActive) return;
-    gameActive = true;
-    
-    document.getElementById('bg').classList.remove('blur-effect');
-    canvas.classList.remove('blur-effect');
-    
-    document.getElementById('sndBg').play().catch(()=>{});
-    sndBg.volume = 0.1;
-    canvas.style.transition = 'transform 0.5s ease-in-out';
-    canvas.classList.add('canvas-live');
-    zipLine.classList.add('canvas-live');
+        if (gameActive) return;
+        gameActive = true;
+        
+        document.getElementById('bg').classList.remove('blur-effect');
+        canvas.classList.remove('blur-effect');
+        
+        document.getElementById('sndBg').play().catch(()=>{});
+        sndBg.volume = 0.3;
+        canvas.style.transition = 'transform 0.5s ease-in-out, filter 0.5s ease-out';
+        canvas.classList.add('canvas-live');
+        zipLine.classList.add('canvas-live');
 
-    splash.style.opacity = '0';
-    setTimeout(() => {
-        splash.style.display = 'none';
-        
-        hand.style.display = 'block';
-        hand.style.left = '50%';
-        hand.style.top = (render.y + render.h * 0.82) + 'px';
-        hand.style.animation = 'handMoveUp 2s infinite ease-in-out';
-        
+        splash.style.opacity = '0';
         setTimeout(() => {
-            hand.style.opacity = '1';
-            canvas.style.transition = 'none';
-        }, 100);
-    }, 500);
-}
+            splash.style.display = 'none';
+            hand.style.display = 'block';
+            hand.style.left = '50%';
+            hand.style.top = (render.y + render.h * 0.82) + 'px';
+            hand.style.animation = 'handMoveUp 2s infinite ease-in-out';
+            setTimeout(() => { hand.style.opacity = '1'; }, 100);
+        }, 500);
+    }
 
     window.addEventListener('pointerdown', (e) => {
         if (!gameActive || progress >= 1) return;
         isDragging = true;
         hand.style.display = 'none';
-        const zipSnd = document.getElementById('sndZip');
-        zipSnd.volume = 1;
-        zipSnd.play().catch(()=>{});
+        document.getElementById('sndZip').play().catch(()=>{});
     });
 
     window.addEventListener('pointermove', (e) => {
@@ -190,30 +229,31 @@
         const currentY = e.clientY;
         let p = (bottomY - currentY) / (render.h * 0.7);
         progress = Math.max(0, Math.min(p, 1));
-        if (progress > lastVoiceProgress + 0.2) {
-            lastVoiceProgress += 0.2;
+        
+        if (progress > lastVoiceProgress + 0.25) {
+            lastVoiceProgress += 0.25;
             const v = document.getElementById('sndVoice');
-            v.volume = 1; v.currentTime = 0.1; v.play().catch(()=>{});
+            v.currentTime = 0; v.play().catch(()=>{});
         }
+        
         draw();
-        if (progress >= 0.90) {
-            const v = document.getElementById('sndVoice');
-            v.volume = 0; v.pause();
-            finish();}
+        if (progress >= 0.92) finish();
     });
 
-    window.addEventListener('pointerup', () => { isDragging = false; document.getElementById('sndZip').pause(); });
+    window.addEventListener('pointerup', () => { 
+        isDragging = false; 
+        document.getElementById('sndZip').pause(); 
+    });
 
     function finish() {
         if (finalCTA.style.display === 'block') return;
         gameActive = false;
         isDragging = false;
-        document.getElementById('sndZip').pause();
         progress = 1;
         draw();
 
-        // Тепер дівчина вже велика, просто залишаємо її в фінальній позиції
-        canvas.style.animation = 'none'; 
+        canvas.classList.remove('canvas-live');
+        zipLine.classList.remove('canvas-live');
         canvas.style.transform = 'translate(-50%, -50%) scale(1.15)'; 
 
         finalOverlay.style.opacity = '1';
@@ -224,58 +264,49 @@
         setTimeout(() => {
             finalCTA.style.opacity = '1';
             finalCTA.style.transform = 'translate(-50%, -50%) scale(1)';
-            finalCTA.style.animation = 'pulse 1.5s infinite ease-in-out';
         }, 50);
     }
 
     function spawnConfetti() {
         const colors = ['#ff0', '#f0f', '#0ff', '#f00', '#fff', '#ffd700', '#00ff66', '#ff9900'];
-        const count = 150; 
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < 80; i++) {
             const c = document.createElement('div');
             c.className = 'confetti';
-            const size = Math.random() * 10 + 6;
-            c.style.width = size + 'px';
-            c.style.height = (size * 0.5) + 'px';
+            c.style.width = (Math.random() * 8 + 4) + 'px';
+            c.style.height = (Math.random() * 4 + 2) + 'px';
             c.style.background = colors[Math.floor(Math.random() * colors.length)];
             c.style.left = Math.random() * 100 + 'vw';
-            c.style.top = (Math.random() * -100) - 20 + 'px';
-            c.style.borderRadius = '2px';
-            c.style.opacity = Math.random() * 0.5 + 0.5;
+            c.style.top = '-20px';
             c.style.animation = `confettiSwing ${Math.random() * 2 + 1}s infinite ease-in-out`;
             document.body.appendChild(c);
-            const fallDuration = 4000 + Math.random() * 3000;
-            const drift = (Math.random() - 0.5) * 300;
             c.animate([
-                { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
-                { transform: `translate(${drift}px, 110vh) rotate(${Math.random() * 1440}deg)`, opacity: 0 }
-            ], { duration: fallDuration, easing: 'linear', delay: Math.random() * 1500 });
-            setTimeout(() => c.remove(), fallDuration + 1500);
+                { transform: `translateY(0) rotate(0deg)`, opacity: 1 },
+                { transform: `translateY(110vh) rotate(${Math.random() * 1000}deg)`, opacity: 0 }
+            ], { duration: 3000 + Math.random() * 2000, easing: 'linear' });
+            setTimeout(() => c.remove(), 5000);
         }
     }
 
     function createStars() {
-        for(let i=0; i<40; i++) {
+        for(let i=0; i<30; i++) {
             const s = document.createElement('div');
             s.className = 'star';
-            const size = 15 + Math.random() * 20;
+            const size = 15 + Math.random() * 15;
             s.style.width = size + 'px'; s.style.height = size + 'px';
             s.style.left = '50%'; s.style.top = '50%';
-            s.style.background = `hsl(${Math.random()*50 + 40}, 100%, 60%)`;
             document.body.appendChild(s);
             const a = Math.random() * Math.PI * 2;
-            const d = 150 + Math.random() * 400;
+            const d = 100 + Math.random() * 400;
             s.animate([
-                { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 },
-                { transform: `translate(${(Math.cos(a)*d)-50}%, ${(Math.sin(a)*d)-50}%) scale(0) rotate(720deg)`, opacity: 0 }
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                { transform: `translate(${(Math.cos(a)*d)}px, ${(Math.sin(a)*d)}px) scale(0)`, opacity: 0 }
             ], { duration: 1200, easing: 'ease-out' });
             setTimeout(() => s.remove(), 1200);
         }
     }
 
-    function clickAd() {  window.location.href = 'https://honeytoon.com/comic-video/teach-me-first?n=1'; }
-    window.onresize = resize;
-    
+    function clickAd() { window.location.href = 'https://honeytoon.com/comic-video/teach-me-first?n=1'; }
+    window.addEventListener('resize', resize);
 </script>
 </body>
 </html>
